@@ -1,0 +1,40 @@
+- hosts: "{{ hosts | default('jumpbox') }}"
+  gather_facts: yes
+  tasks:
+    - name: test connection
+      ping:
+    
+    - name: Add yum repo for MongoDB packages
+      yum_repository:
+        name: mongodb-org-4.4
+        description: MongoDB yum repo for 4.x packages
+        baseurl: https://repo.mongodb.org/yum/redhat/$releasever/mongodb-org/4.4/x86_64/
+        gpgcheck: yes
+        gpgkey: https://www.mongodb.org/static/pgp/server-4.4.asc
+        enabled: yes
+      become: true
+
+    - name: Installing MongoDB
+      yum:
+        name: mongodb-org
+        state: present
+        update_cache: true
+      become: true
+    
+    - name: Update MongoDB config
+      copy:
+        src: ./templates/mongod.conf
+        dest: /etc/mongod.conf
+        owner: root
+        group: root
+        mode: 0644
+        backup: yes
+      become: true
+
+    - name: Restart MongoDB service
+      service:
+        name: mongod 
+        state: restarted
+        enabled: yes
+        daemon_reload: yes
+      become: true

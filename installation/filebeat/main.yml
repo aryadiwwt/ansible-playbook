@@ -1,0 +1,13 @@
+---
+
+- hosts: "{{ hosts | default('jumpbox') }}"
+  gather_facts: yes
+  tasks:
+    - name: test connection
+      ping:
+
+- import_playbook: setup-redhat.yml
+  when: ansible_facts['os_family'] == "RedHat"
+
+- import_playbook: setup-debian.yml
+  when: ansible_facts['os_family'] == "Debian"

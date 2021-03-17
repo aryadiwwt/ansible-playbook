@@ -1,0 +1,92 @@
+- hosts: "{{ hosts | default('jumpbox') }}"
+  gather_facts: yes
+  tasks:
+    - name: test connection
+      ping:
+      
+    - name: Make sure PIP is exists
+      stat: path=/usr/lib/python2.7/site-packages/pip
+      register: pip
+      become: true
+
+    - name: Make sure Docker_py is exists
+      stat: path=/usr/lib/python2.7/site-packages/docker_py-*
+      register: docker_py
+      become: true
+
+    - name: Install pip
+      easy_install:
+        name: pip
+        state: latest
+      when: pip.stat.exists == false
+      become: true
+
+    - name: Install docker_py
+      pip:
+        name: docker-py
+        state: latest
+      when: docker_py.stat.exists == false
+      become: true
+
+    - name: Create a cadvisor container
+      docker_container:
+        name: cadvisor
+        image: gcr.io/cadvisor/cadvisor:v0.36.0
+        volumes:
+          - /:/rootfs:ro
+          - /var/run:/var/run:ro
+          - /sys:/sys:ro
+          - /sys:/sys:ro
+          - /var/lib/docker/:/var/lib/docker:ro
+          - /dev/disk/:/dev/disk:ro
+        published_ports:
+          - 8080:8080
+        privileged: yes
+        devices: /dev/kmsg
+        restart_policy: unless-stopped
+      become: true
+
+    - name: Create a docker_exporter container
+      docker_container:
+        name: docker_exporter
+        image: prometheusnet/docker_exporter
+        volumes:
+          - /var/run/docker.sock:/var/run/docker.sock
+        published_ports:
+          - 9417:9417
+        restart_policy: always
+      become: true
+    
+    - name: Get infos on cadvisor container
+      docker_container_info:
+        name: cadvisor
+      register: cadvisor
+      become: true
+    
+    - name: Get infos on docker_exporter container
+      docker_container_info:
+        name: docker_exporter
+      register: docker_exporter
+      become: true
+
+    - name: Does cadvisor container exist?
+      debug:
+        msg: "The container {{ 'exists' if cadvisor.exists else 'does not exist' }}"
+      become: true
+    
+    - name: Print the status of the cadvisor container
+      debug:
+        msg: "The container status is {{ cadvisor.container['State']['Status'] }}"
+      when: cadvisor.exists
+      become: true
+    
+    - name: Does docker_exporter container exist?
+      debug:
+        msg: "The container {{ 'exists' if docker_exporter.exists else 'does not exist' }}"
+      become: true
+    
+    - name: Print the status of the docker_exporter container
+      debug:
+        msg: "The container status is {{ docker_exporter.container['State']['Status'] }}"
+      when: docker_exporter.exists
+      become: true

@@ -1,0 +1,24 @@
+---
+
+- hosts: "{{ hosts | default('jumpbox') }}"
+  gather_facts: yes
+  tasks:
+    - name: test connection
+      ping:
+
+    - name: Restart goldenbird
+      shell: docker-compose restart $@
+      args:
+        chdir: /opt/mybb-backend/goldenbird_services/
+      become_user: bbguser
+    
+    - name: Check container status
+      command: ./.gb_status.sh
+      register: out
+      args:
+        chdir: /opt/mybb-backend/goldenbird_services/
+      become_user: bbguser
+      become: true
+      
+    - debug: 
+        var: out.stdout_lines

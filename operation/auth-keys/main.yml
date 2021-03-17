@@ -1,0 +1,41 @@
+- hosts: "{{ hosts | default('jumpbox') }}"
+  gather_facts: yes
+  tasks:
+    - name: test connection
+      ping:
+    
+    - name: Make sure .ssh directory exists
+      stat: path=$HOME/.ssh
+      register: ssh
+      become: true
+      become_user: bbguser
+
+    - name: Generate keygen
+      shell: > 
+        ssh-keygen -q -b 2048 -t rsa -N "" -C "creating SSH" -f ~/.ssh/id_rsa
+        creates="~/.ssh/id_rsa"
+      become: true
+      become_user: bbguser
+      when: ssh.stat.exists == false
+    
+    - name: Create file if it doesn't exist
+      file:
+        path: "/home/bbguser/.ssh/authorized_keys"
+        state: touch
+        owner: bbguser
+        group: bbguser
+      become: true
+      when: ssh.stat.exists == false
+      
+    - name: Add authorized_keys
+      lineinfile:
+        path: /home/bbguser/.ssh/authorized_keys
+        insertafter: "^ssh-rsa"
+        line: |
+          {{ user_key }}
+        firstmatch: yes
+        state: present
+        owner: bbguser
+        group: bbguser
+        backup: yes
+      become: true

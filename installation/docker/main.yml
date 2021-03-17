@@ -1,0 +1,63 @@
+- hosts: "{{ hosts | default('jumpbox') }}"
+  gather_facts: yes
+  tasks:
+    - name: test connection
+      ping:
+
+    - name: Installing Docker Prerequisite packages
+      yum:
+        name:
+          - yum-utils
+          - device-mapper-persistent-data
+          - lvm2
+      become: true
+    
+    - name: Configuring docker-ce repo
+      get_url:
+        url: https://download.docker.com/linux/centos/docker-ce.repo
+        dest: /etc/yum.repos.d/docker-ce.repo
+        mode: 0644
+      become: true
+
+    - name: Installing Docker
+      yum:
+        name: docker-ce
+        state: latest
+        update_cache: true
+      become: true
+    - name: Start the Docker server
+      service:
+        name: docker 
+        state: started
+        enabled: yes
+        daemon_reload: yes
+      become: true
+    - name: Adding user bbguser to docker group  
+      user: 
+        name: bbguser
+        group: bbguser
+        shell: /bin/bash
+        groups: docker
+        append: yes
+      become: true
+    - name: Configuring docker-compose repo
+      get_url:
+        url: https://github.com/docker/compose/releases/download/1.27.0/docker-compose-Linux-x86_64
+        dest: /usr/local/bin/docker-compose
+        mode: 0644
+      become: true
+    - name: Change docker-compose permissions
+      file:
+        path: /usr/local/bin/docker-compose
+        owner: root
+        group: root
+        mode: 0555
+      become: true
+    - name: Create a symbolic link
+      file:
+        src: /usr/local/bin/docker-compose
+        dest: /usr/bin/docker-compose
+        owner: root
+        group: root
+        state: link
+      become: true 

@@ -1,0 +1,12 @@
+---
+
+- hosts: "{{ hosts | default('jumpbox') }}"
+  gather_facts: yes
+  tasks:
+    - name: test connection
+      ping:
+    
+    - name: Housekeeping container json
+      shell: ~/housekeep/housekeep-2.sh
+      ignore_errors: yes
+      when: ansible_user == "root"

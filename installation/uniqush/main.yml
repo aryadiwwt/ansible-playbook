@@ -1,0 +1,35 @@
+- hosts: "{{ hosts | default('jumpbox') }}"
+  gather_facts: yes
+  tasks:
+    - name: test connection
+      ping:
+
+    - name: Download uniqush rpm
+      get_url:
+        url: https://github.com/uniqush/uniqush-push/releases/download/2.6.1/uniqush-push-2.6.1-1.x86_64.rpm
+        dest: /tmp/uniqush-push-2.6.1-1.x86_64.rpm
+        mode: 0644
+      become: true
+      
+    - name: Install uniqush rpm
+      yum:
+        name: /tmp/uniqush-push-2.6.1-1.x86_64.rpm
+        state: present
+      become: true
+    
+    - name: Update uniqush config
+      copy:
+        src: ./templates/uniqush-push.conf.j2
+        dest: /etc/uniqush/uniqush-push.conf
+        owner: root
+        group: root
+        mode: 0664
+        backup: yes
+      become: true
+    
+    - name: Run Uniqush-push
+      command: uniqush-push &
+      become: true
+      become_user: bbguser
+
+

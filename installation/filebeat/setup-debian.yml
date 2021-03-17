@@ -1,0 +1,26 @@
+---
+
+- hosts: localhost
+  gather_facts: yes
+  tasks:
+    - name: test connectionnn
+      ping:
+   
+    - name: Download filebeat
+      get_url:
+        url: https://artifacts.elastic.co/downloads/beats/filebeat/filebeat-7.8.0-amd64.deb
+        dest: /tmp/filebeat-7.8.0-amd64.deb
+      become: yes
+
+    - name: Install deb package filebeat
+      apt:
+        deb: /tmp/filebeat-7.8.0-amd64.deb
+      become: yes
+
+    - name: configure systemd to use service
+      systemd:
+        daemon_reload: yes
+        enabled: yes
+        state: started
+        name: filebeat.service
+      become: yes

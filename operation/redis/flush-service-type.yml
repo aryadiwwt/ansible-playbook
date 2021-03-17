@@ -1,0 +1,20 @@
+---
+
+- hosts: "{{ hosts | default('jumpbox') }}"
+  gather_facts: yes
+  vars: 
+    hostip: "{{ hostip }}"
+  tasks:
+    - name: test connection
+      ping:
+
+    - name: redis flush city:svctypes
+      shell: redis-cli -h {{ hostip }} keys "city:svctypes-*" | xargs redis-cli -h {{ hostip }} del
+
+    - name: redis flush http.location_registry.area
+      shell: redis-cli -h {{ hostip }} keys "http.location_registry.area*" | xargs redis-cli -h {{ hostip }} del
+    
+    - name: redis flush serviceType
+      shell: redis-cli -h {{ hostip }} keys "serviceType-*" | xargs redis-cli -h {{ hostip }} del
+
+    

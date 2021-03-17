@@ -1,0 +1,11 @@
+- hosts: "{{ hosts | default('jumpbox') }}"
+  gather_facts: yes
+
+  tasks:
+    - name: test connection
+      ping:
+
+    - name: Set timezone to Asia/Jakarta
+      shell: timedatectl set-timezone Asia/Jakarta
+      become_user: root
+      become: yes

@@ -1,0 +1,18 @@
+#[web]
+#172.26.10.169 ansible_user=aryadiwwt
+
+#[mybb-poc]
+#172.26.10.58 ansible_user=aryadiwwt
+[mybb-poc]
+172.26.10.50 ansible_user=aryadiwwt
+
+[mybb-dev-mrg1]
+172.26.10.159 ansible_user=aryadiwwt
+
+[mybb-stg-kafka]
+172.26.11.65 ansible_user=aryadiwwt
+172.26.11.66 ansible_user=aryadiwwt
+172.26.11.80 ansible_user=aryadiwwt
+
+[mybb-stg-mongodb]
+172.26.11.95 ansible_user=aryadiwwt

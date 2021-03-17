@@ -1,0 +1,51 @@
+---
+
+- hosts: "{{ hosts | default('jumpbox') }}"
+  vars:
+    postgresql_exporter_version: 0.8.0
+  tasks:
+    - name: test connection
+      ping:
+      
+    - name: download PostgreSql exporter
+      get_url:
+        url: https://github.com/wrouesnel/postgres_exporter/releases/download/v{{ postgresql_exporter_version }}/postgres_exporter_v{{ postgresql_exporter_version }}_linux-amd64.tar.gz
+        dest: /tmp
+      become: yes
+    
+    - name: create opt directory for postgres_exporter
+      file:
+        path: /opt/postgres_exporter
+        state: directory
+      become: yes
+
+    - name: unarchive PostgreSql exporter
+      unarchive:
+        remote_src: yes
+        src: /tmp/postgres_exporter_v{{ postgresql_exporter_version }}_linux-amd64.tar.gz
+        dest: /opt/
+      become: yes
+
+    - name: Move file PostgreSql exporter
+      command: mv /opt/postgres_exporter_v{{ postgresql_exporter_version }}_linux-amd64/postgres_exporter /usr/local/bin/
+      become: yes
+
+    - name: install unit file to systemd
+      template:
+        src: postgres_exporter.j2
+        dest: /etc/systemd/system/postgres_exporter.service
+      become: yes
+
+    - name: move DATA_SOURCE_NAME in env
+      template:
+        src: env.j2
+        dest: /opt/postgres_exporter/env.conf
+      become: yes
+
+    - name: configure systemd to use service
+      systemd:
+        daemon_reload: yes
+        enabled: yes
+        state: started
+        name: postgres_exporter.service
+      become: yes

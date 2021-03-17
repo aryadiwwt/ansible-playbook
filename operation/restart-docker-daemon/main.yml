@@ -1,0 +1,23 @@
+---
+
+- hosts: "{{ hosts | default('jumpbox') }}"
+  gather_facts: yes
+  tasks:
+    - name: test connection
+      ping:
+
+    - name: Restart Docker service
+      service:
+        name: docker 
+        state: restarted
+        enabled: yes
+        daemon_reload: yes
+      become: true
+    
+    - name: Check container up and running
+      command: docker ps -a
+      register: docker
+      become: true
+    
+    - debug: 
+        var: docker.stdout_lines

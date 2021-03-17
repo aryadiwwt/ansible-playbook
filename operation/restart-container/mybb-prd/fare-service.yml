@@ -1,0 +1,17 @@
+---
+
+- hosts: "{{ hosts | default('jumpbox') }}"
+  gather_facts: yes
+  tasks:
+    - name: test connection
+      ping:
+
+    - name: Restart fare service
+      shell: docker-compose restart fare_service
+      args:
+        chdir: /opt/mybb-backend/mybb-app/
+      become_user: bbguser
+      register: out
+
+    - debug: 
+        var: out.stderr_lines

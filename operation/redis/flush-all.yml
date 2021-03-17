@@ -1,0 +1,12 @@
+---
+
+- hosts: "{{ hosts | default('jumpbox') }}"
+  gather_facts: yes
+  tasks:
+    - name: test connection
+      ping:
+
+    - name: Flush all the redis db
+      redis:
+        command: flush
+        flush_mode: all

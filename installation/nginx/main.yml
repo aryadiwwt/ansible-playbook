@@ -1,0 +1,39 @@
+- hosts: "{{ hosts | default('jumpbox') }}"
+  gather_facts: yes
+  tasks:
+    - name: test connection
+      ping:
+
+    - name: Add yum repo for nginx search packages
+      yum_repository:
+        name: nginx 
+        description: nginx search yum repo for {{ os_version }} packages
+        baseurl: https://nginx.org/packages/centos/{{ os_version }}/x86_64/
+        gpgcheck: no
+        enabled: yes
+      become: true
+
+    - name: Installing nginx
+      yum:
+        name: nginx
+        state: present
+        update_cache: true
+      become: true
+
+    - name: Update nginx config
+      copy:
+        src: ./templates/nginx.conf.j2
+        dest: /etc/nginx/nginx.conf
+        owner: root
+        group: root
+        mode: 0644
+        backup: yes
+      become: true
+
+    - name: Restart nginx service
+      service:
+        name: nginx
+        state: restarted
+        enabled: yes
+        daemon_reload: yes
+      become: true

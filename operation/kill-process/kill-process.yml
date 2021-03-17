@@ -1,0 +1,29 @@
+---
+
+- hosts: "{{ hosts | default('jumpbox') }}"
+  gather_facts: yes
+  tasks:
+    - name: test connection
+      ping:
+    
+    - name: kill proses malware user root
+      shell: ~/.kill-process.sh
+      ignore_errors: yes
+      when: ansible_user == "root"
+    
+    - name: kill proses trace malware user root
+      shell: ~/.kill-trace.sh
+      ignore_errors: yes
+      when: ansible_user == "root"
+
+    - name: kill proses malware user bbuser
+      shell: /home/bbuser/.kill-process.sh
+      ignore_errors: yes
+      sudo : yes
+      when: ansible_user == "bbuser"
+
+    - name: kill proses trace malware user bbuser
+      shell: /home/bbuser/.kill-trace.sh
+      ignore_errors: yes
+      sudo : yes
+      when: ansible_user == "bbuser"

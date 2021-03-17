@@ -1,0 +1,96 @@
+---
+
+- hosts: "{{ hosts | default('jumpbox') }}"
+  gather_facts: yes
+  vars:
+    RELEASE: 2.20.1
+  tasks:
+    - name: test connectionnn
+      ping:
+   
+    - name: install unzip
+      apt: name=unzip update_cache=yes state=latest
+      become: yes
+
+    - name: create group Prometheus
+      become: yes
+      group:
+        name: prometheus
+        state: present
+
+    - name: create user Prometheus
+      user:
+        name: prometheus
+        group: prometheus
+        createhome: no
+        system: yes
+        state: present
+      become: yes
+
+    - name: create directory data and configuration for prometheus
+      file:
+        path: "{{ item }}"
+        state: directory
+      become: yes
+      with_items:
+         - /var/lib/prometheus
+         - /etc/prometheus
+
+    - name: Download Prometheus
+      get_url:
+        url: https://github.com/prometheus/prometheus/releases/download/v{{ RELEASE }}/prometheus-{{ RELEASE }}.linux-amd64.tar.gz
+        dest: /tmp
+      become: yes
+
+    - name: unarchive Prometheus
+      unarchive:
+        remote_src: yes
+        src: /tmp/prometheus-{{ RELEASE }}.linux-amd64.tar.gz
+        dest: /tmp/
+      become: yes
+
+    - name: Copy file prometheus to /etc/prometheus
+      copy:
+        remote_src: yes
+        src: "{{ item }}"
+        dest: /etc/prometheus
+        owner: prometheus
+        group: prometheus
+      become: yes
+      with_items:
+         - /tmp/prometheus-{{ RELEASE }}.linux-amd64/consoles
+         - /tmp/prometheus-{{ RELEASE }}.linux-amd64/console_libraries
+    
+    - name: Copy binary prometheus to /usr/local/bin
+      copy:
+        remote_src: yes
+        src: "{{ item }}"
+        dest: /usr/local/bin
+        owner: prometheus
+        group: prometheus
+      become: yes
+      with_items:
+         - /tmp/prometheus-{{ RELEASE }}.linux-amd64/prometheus
+         - /tmp/prometheus-{{ RELEASE }}.linux-amd64/promtool
+
+    - name: copy file prometheus yml
+      template:
+        src: config.j2
+        dest: /etc/prometheus/prometheus.yml
+        owner: prometheus
+        group: prometheus
+      become: yes
+     
+    - name: install unit file to systemd
+      template:
+        src: prometheus.j2
+        dest: /etc/systemd/system/prometheus.service
+      become: yes
+
+    - name: configure systemd to use service
+      systemd:
+        daemon_reload: yes
+        enabled: yes
+        state: started
+        name: prometheus.service
+      become: yes

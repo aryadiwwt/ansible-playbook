@@ -1,0 +1,24 @@
+---
+
+- hosts: "{{ hosts | default('jumpbox') }}"
+  gather_facts: yes
+  tasks:
+    - name: test connection
+      ping:
+
+    - name: Restart map_service
+      shell: docker-compose restart map_service
+      args:
+        chdir: /home/icehouse/mapservice
+      become_user: icehouse
+    
+    - name: Check container status
+      command: ./.map_svc_status.sh
+      register: out
+      args:
+        chdir: /home/icehouse/mapservice
+      become_user: icehouse
+      become: true
+      
+    - debug: 
+        var: out.stdout_lines

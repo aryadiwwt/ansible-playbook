@@ -1,0 +1,16 @@
+- hosts: "{{ hosts | default('jumpbox') }}"
+  gather_facts: yes
+  tasks:
+    - name: test connection
+      ping:
+
+    - name: create MRG log, config and certs directory if they don't exist
+      file:
+        path: "{{ item }}"
+        state: directory
+        owner: bbguser
+        group: bbguser
+        mode: 0775
+      with_items:
+        - /opt/mybb-backend/mpgv2/logs
+      become: true

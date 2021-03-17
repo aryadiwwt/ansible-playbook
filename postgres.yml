@@ -1,0 +1,28 @@
+-  name: Postgresql Installation
+   hosts: postgre
+   tasks:
+     - name: Add yum repo for Elasticsearch packages
+       yum_repository:
+         name: postgresql11
+         description: postgresql yum repository
+         baseurl: https://download.postgresql.org/pub/repos/yum/reporpms/EL-7-x86_64/pgdg-redhat-repo-latest.noarch.rpm
+         enabled: yes
+       become: true
+     - name: Installing postgresql
+       yum:
+         name: postgresql11-server
+         state: present
+         update_cache: true
+       become: true
+     - name: Initializing database
+       command: /usr/pgsql-11/bin/postgresql-11-setup initdb
+       become: true
+     - name: Start postgresql service
+       service:
+         name: postgresql-11
+         state: started
+         enabled: yes
+         daemon_reload: yes
+       become: true
+
+       

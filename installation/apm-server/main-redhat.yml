@@ -1,0 +1,40 @@
+- hosts: "{{ hosts | default('jumpbox') }}"
+  gather_facts: yes
+  tasks:
+    - name: test connection
+      ping:
+    
+    - name: Add yum repo for APM packages
+      yum_repository:
+        name: apm-server-7.9.1
+        description: APM yum repo for 7.9.x packages
+        baseurl: https://artifacts.elastic.co/downloads/apm-server/apm-server-7.9.1-x86_64.rpm
+        gpgcheck: yes
+        gpgkey: https://artifacts.elastic.co/GPG-KEY-elasticsearch
+        enabled: yes
+      become: true
+
+    - name: Installing apm
+      package:
+        name: apm-server-7.9.1
+        state: present
+        update_cache: true
+      become: true
+    
+    - name: Update apm config
+      copy:
+        src: ./templates/apm-server.yml.j2
+        dest: /etc/apm-server/apm-server.yml
+        owner: root
+        group: root
+        mode: 0644
+        backup: yes
+      become: true
+
+    - name: Restart apm service
+      service:
+        name: apm-server 
+        state: restarted
+        enabled: yes
+        daemon_reload: yes
+      become: true

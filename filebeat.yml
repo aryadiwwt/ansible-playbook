@@ -1,0 +1,27 @@
+---
+
+-  name: Filebeat Installation
+   hosts: mybb-dev
+   tasks:
+     - name: Add yum repo for Elasticsearch packages
+       yum_repository:
+         name: elastic
+         description: Elasticsearch yum repo for 6.x packages
+         baseurl: https://artifacts.elastic.co/packages/6.x/yum
+         gpgcheck: yes
+         gpgkey: https://artifacts.elastic.co/GPG-KEY-elasticsearch
+         enabled: yes
+       become: true
+     - name: Installing Filebeat
+       yum:
+         name: filebeat
+         state: present
+         update_cache: true
+       become: true
+     - name: Start Filebeat service
+       service:
+         name: filebeat
+         state: started
+         enabled: yes
+         daemon_reload: yes
+       become: true

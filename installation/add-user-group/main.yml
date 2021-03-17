@@ -1,0 +1,19 @@
+- hosts: "{{ hosts | default('jumpbox') }}"
+  gather_facts: yes
+  tasks:
+    - name: test connection
+      ping:
+
+    - name: Ensure the group exists
+      group:
+        name: bbguser
+        state: present
+      become: true
+    - name: Create bbguser user
+      user:
+        name: bbguser
+        #password: P@ssw0rd
+        comment: bbguser use for applications
+        shell: /bin/bash
+        groups: bbguser,adm,google-sudoers
+      become: true

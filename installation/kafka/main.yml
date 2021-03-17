@@ -1,0 +1,115 @@
+---
+
+- hosts: "{{ hosts | default('jumpbox') }}"
+  gather_facts: yes
+
+  tasks:
+    - name: test connection
+      ping:
+
+    - name: Installing java
+      yum:
+        name: java-{{ java_version }}
+        state: present
+        update_cache: true
+      become: true
+    - name: Download kafka
+      get_url:
+        url: https://archive.apache.org/dist/kafka/{{ kafka_version }}/kafka_{{ scala_version }}-{{ kafka_version }}.tgz
+        dest: /home/bbguser
+      become: true
+      become_user: bbguser
+    - name: Make sure extracted kafka is exists
+      stat: path=/home/bbguser/kafka
+      register: kafka
+      become: true
+    - name: Extract to a folder
+      unarchive:
+        src: /home/bbguser/kafka_{{ scala_version }}-{{ kafka_version }}.tgz
+        dest: /home/bbguser
+        remote_src: yes
+      when: kafka.stat.exists == false
+      become: true
+      become_user: bbguser
+    - name: Rename the extracted directory to kafka
+      shell: mv kafka_{{ scala_version }}-{{ kafka_version }} kafka
+      args:
+        chdir: /home/bbguser
+      become: true
+      become_user: bbguser
+    - name: Create a kafka logs directory
+      file:
+        path: /data/kafka-logs
+        state: directory
+        owner: bbguser
+        group: bbguser
+        mode: 0775
+      become: true
+    - name: Create a zookeeper logs directory
+      file:
+        path: /data/zookeeper
+        state: directory
+        owner: bbguser
+        group: bbguser
+        mode: 0775
+      become: true 
+    - name: Create a symbolic link
+      file:
+        src: /home/bbguser/kafka
+        dest: /usr/local/kafka
+        owner: bbguser
+        group: bbguser
+        state: link
+      become: true
+    - name: copy file server.properties
+      copy:
+        src: ./templates/server.properties.j2
+        dest: /home/bbguser/kafka/config/server.properties
+        owner: bbguser
+        group: bbguser
+        mode: 0644
+        backup: yes
+      become: yes
+    - name: copy file zookeeper.properties
+      copy:
+        src: ./templates/zookeeper.properties.j2
+        dest: /home/bbguser/kafka/config/zookeeper.properties
+        owner: bbguser
+        group: bbguser
+        mode: 0644
+        backup: yes
+      become: yes
+    - name: copy file kafka.service
+      copy:
+        src: ./templates/kafka.service.j2
+        dest: /etc/systemd/system/kafka.service
+        owner: root
+        group: root
+        mode: 0644
+        backup: yes
+      become: yes
+    - name: copy file zookeeper.service
+      copy:
+        src: ./templates/zookeeper.service.j2
+        dest: /etc/systemd/system/zookeeper.service
+        owner: root
+        group: root
+        mode: 0644
+        backup: yes
+      become: yes
+    - name: Start zookeeper service
+      service:
+        name: zookeeper 
+        state: started
+        enabled: yes
+        daemon_reload: yes
+      become: true
+    - name: Start the kafka service
+      service:
+        name: kafka 
+        state: started
+        enabled: yes
+        daemon_reload: yes
+      become: true
+
+

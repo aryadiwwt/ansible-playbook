@@ -1,0 +1,26 @@
+---
+
+- hosts: "{{ hosts | default('jumpbox') }}"
+  gather_facts: yes
+  tasks:
+    - name: test connection
+      ping:
+
+    - name: Restart api_gateway
+      shell: docker-compose -f docker-compose.production.yaml restart api_gateway
+      args:
+        chdir: /home/bbuser/mybb-app/
+      become_user: bbuser
+      become: true
+    
+    - name: Check container status
+      command: ./api_gateway_status.sh
+      register: out
+      args:
+        chdir: /home/bbuser/
+      become_user: bbuser
+      become: true
+      
+    - debug: 
+        var: out.stdout_lines
+

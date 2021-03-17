@@ -1,0 +1,9 @@
+[Unit]
+Description=Prometheus exporter for Kafka
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/kafka_exporter --kafka.server={{ ansible_all_ipv4_addresses[0] }}:9092
+
+[Install]
+WantedBy=multi-user.target

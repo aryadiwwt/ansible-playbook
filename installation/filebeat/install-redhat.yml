@@ -1,0 +1,29 @@
+- hosts: "{{ hosts | default('jumpbox') }}"
+  gather_facts: yes
+  tasks:
+    - name: test connection
+      ping:
+
+    - name: Add yum repo for Elasticsearch packages
+      yum_repository:
+        name: elastic
+        description: Elasticsearch yum repo for {{ VERSION }} packages
+        baseurl: https://artifacts.elastic.co/packages/{{ VERSION }}/yum
+        gpgcheck: yes
+        gpgkey: https://artifacts.elastic.co/GPG-KEY-elasticsearch
+        enabled: yes
+      become: true
+
+    - name: Installing Filebeat
+      yum:
+        name: filebeat
+        state: present
+        update_cache: true
+      become: true
+    - name: Start Filebeat service
+      service:
+        name: filebeat
+        state: started
+        enabled: yes
+        daemon_reload: yes
+      become: true

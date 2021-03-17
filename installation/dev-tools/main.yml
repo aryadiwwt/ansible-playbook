@@ -1,0 +1,15 @@
+- hosts: "{{ hosts | default('jumpbox') }}"
+  gather_facts: yes
+  tasks:
+    - name: test connection
+      ping:
+
+    - name: Installing git, golang and nano editor
+      yum:
+        name:
+          - nano
+          - git
+          - golang
+        state: latest
+        update_cache: true
+      become: true

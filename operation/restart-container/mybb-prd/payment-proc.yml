@@ -1,0 +1,24 @@
+---
+
+- hosts: "{{ hosts | default('jumpbox') }}"
+  gather_facts: yes
+  tasks:
+    - name: test connection
+      ping:
+
+    - name: Restart payment_processor
+      shell: docker-compose restart payment_processor
+      args:
+        chdir: /opt/mybb-backend/mybb-app/
+      become_user: bbguser
+    
+    - name: Check container status
+      command: ./.payment_proc_status.sh
+      register: out
+      args:
+        chdir: /opt/mybb-backend/mybb-app/
+      become_user: bbguser
+      become: true
+      
+    - debug: 
+        var: out.stdout_lines

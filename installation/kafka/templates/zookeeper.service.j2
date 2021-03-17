@@ -1,0 +1,16 @@
+[Unit]
+Description=Zookeeper Daemon
+Before=kafka.service
+
+[Service]
+Type=simple
+User=bbguser
+Group=bbguser
+LimitNOFILE=50000
+Restart=on-failure
+#EnvironmentFile=/etc/default/kafka
+ExecStart=/usr/local/kafka/bin/zookeeper-server-start.sh /usr/local/kafka/config/zookeeper.properties
+ExecStop=/usr/local/kafka/bin/zookeeper-server-stop.sh /usr/local/kafka/config/zookeeper.properties
+
+[Install]
+WantedBy=multi-user.target

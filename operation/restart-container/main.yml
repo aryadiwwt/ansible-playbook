@@ -1,0 +1,36 @@
+---
+
+- hosts: "{{ hosts | default('jumpbox') }}"
+  gather_facts: yes
+  tasks:
+    - name: test connection
+      ping:
+    
+    - name: Restart api_gateway and order_processor
+      shell: docker-compose -f docker-compose.production.yaml restart {{ items }}
+      args:
+        chdir: /home/bbuser/mybb-app/
+      with_items:
+        - api_gateway
+        - order_processor
+      become_user: bbuser
+      become: true
+    
+    - name: Get infos on container
+      docker_container_info:
+        name:
+          - api_gateway
+          - order_processor
+      register: result
+      become: true
+
+    - name: Does container exist?
+      debug:
+        msg: "The container {{ 'exists' if result.exists else 'does not exist' }}"
+      become: true
+    
+    - name: Print the status of the container
+      debug:
+        msg: "The container status is {{ result.container['State']['Status'] }}"
+      when: result.exists
+      become: true

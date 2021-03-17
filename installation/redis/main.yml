@@ -1,0 +1,29 @@
+---
+
+- hosts: "{{ hosts | default('jumpbox') }}"
+  gather_facts: yes
+  tasks:
+    - name: test connection
+      ping:
+
+    - name: Installing Redis
+      yum:
+        name: redis
+        state: present
+        update_cache: true
+      become: true
+    - name: copy file template redis
+      template:
+        src: redis.conf.j2
+        dest: /etc/redis.conf
+        owner: redis
+        group: root
+        backup: yes
+      become: yes
+    - name: Start the Redis server
+      service:
+        name: redis 
+        state: started
+        enabled: yes
+        daemon_reload: yes
+      become: true

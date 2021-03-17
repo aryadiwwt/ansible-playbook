@@ -1,0 +1,42 @@
+---
+- hosts: "{{ hosts | default('jumpbox') }}"
+  gather_facts: yes
+  tasks:
+    - name: test connectionnn
+      ping:
+
+    - name: Download monitoring agent
+      get_url:
+        url: https://dl.google.com/cloudagents/add-monitoring-agent-repo.sh
+        dest: /tmp/add-monitoring-agent-repo.sh
+        mode: 0644
+      become: true
+
+     # Installing stackdriver agent
+    - name: Installing agent for monitoring
+      shell: "{{  item  }}"
+      loop:
+        - chmod +x /tmp/add-monitoring-agent-repo.sh
+        - bash /tmp/add-monitoring-agent-repo.sh
+      become: true
+    
+    - name: Update apt packages
+      apt:
+        update_cache: yes
+        cache_valid_time: 86400
+      become: true
+
+    - name: installing agent
+      apt:
+        name: stackdriver-agent
+        state: latest
+        update_cache: yes
+      become: yes
+      
+    - name: Start the stackdriver-agent service
+      service:
+        name: stackdriver-agent 
+        state: started
+        enabled: yes
+        daemon_reload: yes
+      become: true

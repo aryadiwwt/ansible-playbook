@@ -1,0 +1,35 @@
+---
+
+- hosts: "{{ hosts | default('jumpbox') }}"
+  gather_facts: yes
+  vars:
+    ip_elasticsearch: 172.26.20.227
+    kibana_version: 7.9.1
+  tasks:
+    - name: test connectionnn
+      ping:
+
+    - name: Download kibana 7.9
+      get_url:
+        url: https://artifacts.elastic.co/downloads/kibana/kibana-{{ kibana_version }}-amd64.deb
+        dest: /tmp/kibana-{{ kibana_version }}-amd64.deb
+      become: yes
+
+    - name: Install deb package kibana
+      apt:
+        deb: /tmp/kibana-{{ kibana_version }}-amd64.deb
+      become: yes
+   
+    - name: copy file template kibana
+      template:
+        src: kibana.j2
+        dest: /etc/kibana/kibana.yml
+      become: yes
+
+    - name: configure systemd to use service and restarted
+      systemd:
+        daemon_reload: yes
+        enabled: yes
+        state: restarted
+        name: kibana.service
+      become: yes

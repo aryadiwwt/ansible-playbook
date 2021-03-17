@@ -1,0 +1,45 @@
+---
+
+- hosts: "{{ hosts | default('jumpbox') }}"
+  gather_facts: yes
+  vars:
+    elastic_version: 7
+  tasks:
+    - name: test connectionnn
+      ping:
+   
+    - name: get apt repo key
+      apt_key:
+        url: https://artifacts.elastic.co/GPG-KEY-elasticsearch
+        state: present
+      become: yes
+
+    - name: install apt repo
+      apt_repository:
+        repo: deb https://artifacts.elastic.co/packages/{{ elastic_version }}.x/apt stable main
+        state: present
+        filename: elastic-{{ elastic_version }}.x.list
+        update_cache: yes
+      become: yes
+
+    - name: install java
+      apt:
+        name: openjdk-8-jre
+        state: present
+        update_cache: yes
+      become: yes
+
+    - name: install logstash
+      apt:
+        name: logstash
+        state: present
+        update_cache: yes
+      become: yes
+
+    - name: configure systemd to use service
+      systemd:
+        daemon_reload: yes
+        enabled: yes
+        state: started
+        name: logstash.service
+      become: yes

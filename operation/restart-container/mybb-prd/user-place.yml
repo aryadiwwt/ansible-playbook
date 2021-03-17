@@ -1,0 +1,24 @@
+---
+
+- hosts: "{{ hosts | default('jumpbox') }}"
+  gather_facts: yes
+  tasks:
+    - name: test connection
+      ping:
+
+    - name: Restart user_place
+      shell: docker-compose restart user_place
+      args:
+        chdir: /home/icehouse/userplace
+      become_user: icehouse
+    
+    - name: Check container status
+      command: ./.user_place_status.sh
+      register: out
+      args:
+        chdir: /home/icehouse/userplace
+      become_user: icehouse
+      become: true
+      
+    - debug: 
+        var: out.stdout_lines
